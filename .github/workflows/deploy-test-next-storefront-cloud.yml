@@ -1,0 +1,40 @@
+name: Deploy Test Next
+on:
+  push:
+    branches:
+      - v2
+      - v2-patch/**
+      - v2-release/**
+      - v2-develop
+
+jobs:
+  configure-enviroment:
+    name: Setup enviroment
+    uses: vuestorefront/storefront-ui/.github/workflows/configure-environment.yml@v2-develop
+
+  build:
+    needs: configure-enviroment
+    uses: vuestorefront/storefront-ui/.github/workflows/image-build-vue-storefront-cloud.yml@v2-develop
+    secrets: inherit
+    with:
+      DOCKER_NAMESPACE: ${{ needs.configure-enviroment.outputs.docker-namespace }}
+      ARTIFACT_TYPE: "sfui2-docs-react"
+      DOCKERFILE_PATH: ".vuestorefrontcloud/test-next/docker/Dockerfile"
+      ENVIRONMENT: ${{ needs.configure-enviroment.outputs.environment }}
+      TARGET_DOMAIN: ${{ needs.configure-enviroment.outputs.target-domain }}
+
+  deploy:
+    needs: [ build, configure-enviroment ]
+    uses: vuestorefront/storefront-ui/.github/workflows/deploy-docker-image-vue-storefront-cloud.yml@v2-develop
+    secrets: inherit
+    permissions:
+      deployments: write
+    with:
+      ENVIRONMENT: ${{ needs.configure-enviroment.outputs.environment }}
+      TARGET_URL: ${{ needs.configure-enviroment.outputs.target-domain }}/v2-react
+      FARMER_NAMESPACE_NAME: ${{ needs.configure-enviroment.outputs.farmer-instance-name }}
+      DOCS_NAME: "sfui2-docs-react"
+      DOCS_IMAGE: registry.storefrontcloud.io/${{ needs.configure-enviroment.outputs.docker-namespace }}/sfui2-docs-react
+      DOCS_SUBPATH: "/v2-react"
+      DOCS_PORT: "3000"
+      HAS_BASE_PATH: "true"

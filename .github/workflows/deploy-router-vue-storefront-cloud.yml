@@ -1,0 +1,66 @@
+name: Deploy nginx router
+on:
+  push:
+    branches:
+      - v2
+      - v2-patch/**
+      - v2-release/**
+      - v2-develop
+
+jobs:
+  configure-enviroment:
+    name: Setup enviroment
+    uses: vuestorefront/storefront-ui/.github/workflows/configure-environment.yml@v2-develop
+
+  build:
+    needs: configure-enviroment
+    uses: vuestorefront/storefront-ui/.github/workflows/image-build-vue-storefront-cloud.yml@v2-develop
+    secrets: inherit
+    with:
+      DOCKER_NAMESPACE: ${{ needs.configure-enviroment.outputs.docker-namespace }}
+      ARTIFACT_TYPE: "vue-storefront"
+      DOCKERFILE_PATH: ".vuestorefrontcloud/router/docker/Dockerfile"
+      ENVIRONMENT: ${{ needs.configure-enviroment.outputs.environment }}
+      TARGET_DOMAIN: ${{ needs.configure-enviroment.outputs.target-domain }}
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [configure-enviroment, build]
+    permissions:
+      deployments: write
+
+    steps:
+      - uses: chrnorm/deployment-action@releases/v1
+        name: Create GitHub deployment
+        id: deployment
+        with:
+          token: ${{ github.token }}
+          target_url: https://docs.storefrontui.io
+          environment: ${{ needs.configure-enviroment.outputs.environment }}
+          initial_status: in_progress
+      - name: Deploy to demo.storefrontui.io
+        run: |
+          if curl -s -H 'X-User-Id: ${{ secrets.CLOUD_USERNAME }}'  -H 'X-Api-Key: ${{ secrets.CLOUD_PASSWORD }}' -H 'Content-Type: application/json' -X PATCH -d '{"front_version":"${{ github.sha }}"}' https://farmer.vuestorefront.cloud/instance/${{ needs.configure-enviroment.outputs.farmer-instance-name }} | grep -q '"code":200'; then
+            echo "Instance updated"
+          else
+            echo "Something went wrong during the update process..."
+            exit 1
+          fi
+      - name: Update deployment status (success)
+        if: success()
+        uses: chrnorm/deployment-status@releases/v1
+        with:
+          token: "${{ github.token }}"
+          target_url: ${{ needs.configure-enviroment.outputs.target-domain }}
+          state: "success"
+          description: Congratulations! The deploy is done.
+          deployment_id: ${{ steps.deployment.outputs.deployment_id }}
+      - name: Update deployment status (failure)
+        if: failure()
+        uses: chrnorm/deployment-status@releases/v1
+        with:
+          token: "${{ github.token }}"
+          target_url: ${{ needs.configure-enviroment.outputs.target-domain }}
+          description: Unfortunately, the instance hasn't been updated.
+          state: "failure"
+          deployment_id: ${{ steps.deployment.outputs.deployment_id }}

@@ -1,0 +1,48 @@
+{
+  "name": "@storefront-ui/preview-next",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "rimraf .next && next dev -p 3002",
+    "build": "PROD=true next build",
+    "build:next": "yarn build",
+    "serve": "next start",
+    "lint": "yarn eslint --max-warnings 0 && yarn prettier --check",
+    "lint:fix": "yarn eslint --fix && yarn prettier --write",
+    "eslint": "next lint --ext .tsx,.ts",
+    "prettier": "prettier --log-level warn --no-error-on-unmatched-pattern \"**/*.{ts,tsx}\""
+  },
+  "dependencies": {
+    "@storefront-ui/preview-shared": "workspace:*",
+    "classnames": "^2.5.1",
+    "lodash-es": "^4.17.21",
+    "next": "^14.2.5",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-transition-group": "^4.4.5",
+    "react-use": "^17.5.1",
+    "swr": "^2.2.5"
+  },
+  "devDependencies": {
+    "@frsource/autoresize-textarea": "^2.0.87",
+    "@storefront-ui/eslint-config": "workspace:*",
+    "@storefront-ui/example-style": "workspace:*",
+    "@storefront-ui/react": "workspace:*",
+    "@storefront-ui/shared": "workspace:*",
+    "@storefront-ui/tailwind-config": "workspace:*",
+    "@storefront-ui/tw-plugin-peer-next": "workspace:*",
+    "@storefront-ui/typography": "workspace:*",
+    "@tailwindcss/typography": "^0.5.13",
+    "@types/lodash-es": "^4.17.12",
+    "@types/node": "^20.12.7",
+    "@types/react": "^18.0.28",
+    "@types/react-dom": "^18.0.11",
+    "@types/react-transition-group": "^4.4.5",
+    "glob-promise": "^6.0.7",
+    "prettier": "^3.0.0",
+    "rimraf": "^6.0.1",
+    "string-replace-loader": "^3.1.0",
+    "tailwindcss": "^3.4.7",
+    "ts-loader": "^9.4.2"
+  }
+}
